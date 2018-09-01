@@ -15,9 +15,9 @@ class Ant {
         // poison weight
         this.dna[1] = random(-2, 2);
         // food perceprion
-        this.dna[2] = random(0, 100);
+        this.dna[2] = random(1, 100);
         // poison perceprion
-        this.dna[3] = random(0, 100);
+        this.dna[3] = random(1, 100);
 
         // Health
         this.health = 1;
@@ -61,22 +61,24 @@ class Ant {
 
     eat(list, nutrition, perception) {
         let record = Infinity;
-        let closestIndex = -1;
+        let closest = null;
 
-        list.forEach((item, i) => {
-            // let d = dist(this.pos.x, this.pos.y, item.x, item.y);
+        for (let i = list.length - 1; i >= 0; i--) {
+            let item = list[i];
             let d = this.pos.dist(item);
-            if (d < record && d < perception) {
-                record = d;
-                closestIndex = i;
+            if (d < this.maxSpeed) {
+                list.splice(closest, 1);
+                this.health += nutrition;
+            } else {
+                if (d < record && d < perception) {
+                    record = d;
+                    closest = list[i];
+                }
             }
-        });
+        }
 
-        if (record < 5) {
-            list.splice(closestIndex, 1);
-            this.health += nutrition;
-        } else if (closestIndex > -1) {
-            return this.seek(list[closestIndex]);
+        if (closest !== null) {
+            return this.seek(closest);
         }
 
         return createVector(0, 0);
