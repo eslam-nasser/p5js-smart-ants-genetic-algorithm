@@ -6,9 +6,11 @@ class Ant {
         this.acc = createVector();
         // Limits
         this.r = 3;
+        this.ifInRangeThenEat = 5;
         this.maxSpeed = random(2, 5);
         this.maxForce = random(0.1, 0.5);
-        this.mr = 0.1;
+        this.mutaionRate = 0.1;
+        this.chanceOfReproducing = 0.0001;
 
         if (parentDNA.legnth > 0) {
             // Copy parent dna
@@ -59,8 +61,8 @@ class Ant {
         this.acc.mult(0);
     }
 
-    cloneMe() {
-        if (random(1) < 0.001) {
+    tryToReproduce() {
+        if (random(1) < this.chanceOfReproducing) {
             return new Ant(this.pos.x, this.pos.y, this.dna);
         } else {
             return null;
@@ -70,10 +72,10 @@ class Ant {
     seek(target) {
         const desired = p5.Vector.sub(target, this.pos);
         const d = dist(target.x, target.y, this.pos.x, this.pos.y);
-        // if (d < 100) {
-        //     const speed = map(d, 0, 100, 0, this.maxSpeed);
-        //     desired.setMag(speed);
-        // }
+        if (d < 100) {
+            const speed = map(d, 0, 100, 0, this.maxSpeed * 1.5);
+            desired.setMag(speed);
+        }
         const seekForce = p5.Vector.sub(desired, this.vel);
         seekForce.limit(this.maxForce);
         return seekForce;
@@ -99,7 +101,18 @@ class Ant {
             let d = this.pos.dist(item);
             if (d < this.maxSpeed) {
                 list.splice(i, 1);
+                // Increase/Decrease health
                 this.health += nutrition;
+                // Increase/Decrease size
+                this.r += nutrition / 4;
+                // Increase/Decrease Max Speed
+                this.maxSpeed += nutrition / 4;
+                // Increase Sight
+                if (this.dna[0] < 0.005) {
+                    this.dna[0] += 0.0001;
+                }
+                // Increase the chance of reproducing
+                this.chanceOfReproducing += 0.001;
             } else {
                 if (d < record && d < perception) {
                     record = d;
@@ -125,31 +138,48 @@ class Ant {
         push();
         translate(this.pos.x, this.pos.y);
         rotate(angle);
+        // Debug
+        if (controls['debug-mode']) {
+            // Food info
+            strokeWeight(3);
+            stroke(0, 255, 0);
+            noFill();
+            line(0, 0, 0, -this.dna[0] * 20);
+            ellipse(0, 0, this.dna[2] * 2);
 
-        // Food info
-        strokeWeight(3);
-        stroke(0, 255, 0);
-        noFill();
-        line(0, 0, 0, -this.dna[0] * 20);
-        ellipse(0, 0, this.dna[2] * 2);
-
-        // Poison info
-        strokeWeight(2);
-        stroke(255, 0, 0);
-        line(0, 0, 0, this.dna[1] * 20);
-        ellipse(0, 0, this.dna[3] * 2);
+            // Poison info
+            strokeWeight(2);
+            stroke(255, 0, 0);
+            line(0, 0, 0, this.dna[1] * 20);
+            ellipse(0, 0, this.dna[3] * 2);
+        } else {
+            stroke(255, 50);
+            strokeWeight(0.1);
+            noFill();
+            ellipse(0, 0, this.dna[2] * 2);
+        }
 
         let gr = color(0, 255, 0);
         let rd = color(255, 0, 0);
         let bodyColor = lerpColor(rd, gr, this.health);
-
         fill(bodyColor);
         stroke(bodyColor);
+
+        // Ant's body
         beginShape();
         vertex(0, -this.r * 2);
         vertex(-this.r, this.r * 2);
         vertex(this.r, this.r * 2);
         endShape(CLOSE);
+
+        // Health Text
+        let textPos = this.pos.copy();
+        fill(255);
+        stroke(0);
+        rotate(-angle);
+        textPos.normalize();
+        text(this.health.toFixed(2), textPos.x - 10, textPos.y + 20);
+        rotate(angle);
 
         pop();
     }
