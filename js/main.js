@@ -5,22 +5,34 @@ let poisons = [];
 function setup() {
     createCanvas(640, 480);
     ants.push(new Ant(random(width), random(height)));
+    ants.push(new Ant(random(width), random(height)));
+    ants.push(new Ant(random(width), random(height)));
 
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 50; i++) {
         foods.push(createVector(random(width), random(height)));
-        // poisons.push(createVector(random(width), random(height)));
+    }
+    for (let i = 0; i < 10; i++) {
+        poisons.push(createVector(random(width), random(height)));
     }
 }
 
 function draw() {
     background(55);
 
-    ants.forEach(ant => {
-        ant.eat(foods);
-        // ant.seek(target);
-        ant.update();
-        ant.show();
-    });
+    if (random(1) < 0.05) {
+        foods.push(createVector(random(width), random(height)));
+    }
+
+    for (let i = ants.length - 1; i >= 0; i--) {
+        ants[i].behaviors(foods, poisons);
+        ants[i].update();
+        // ants[i].edges();
+        ants[i].show();
+
+        if (ants[i].dead()) {
+            ants.splice(i, 1);
+        }
+    }
 
     foods.forEach(food => {
         fill(0, 255, 0);
