@@ -1,5 +1,5 @@
 class Ant {
-    constructor(x = 0, y = 0, parentDNA = []) {
+    constructor(x = 0, y = 0, parentDNA = [], parentHealth = 1) {
         // Forces
         this.pos = createVector(x, y);
         this.vel = createVector();
@@ -18,6 +18,8 @@ class Ant {
             this.dna[1] = parentDNA[1];
             this.dna[2] = parentDNA[2];
             this.dna[3] = parentDNA[3];
+            // Copy parent health
+            this.health = parentHealth / 2;
             // Mutaion
             if (random(1) < this.mr) {
                 this.dna[0] += random(-0.1, 0.1);
@@ -42,10 +44,9 @@ class Ant {
             this.dna[2] = random(1, 100);
             // poison perceprion
             this.dna[3] = random(1, 100);
+            // Health
+            this.health = 1;
         }
-
-        // Health
-        this.health = 1;
     }
 
     applyForce(f) {
@@ -63,7 +64,7 @@ class Ant {
 
     tryToReproduce() {
         if (random(1) < this.chanceOfReproducing) {
-            return new Ant(this.pos.x, this.pos.y, this.dna);
+            return new Ant(this.pos.x, this.pos.y, this.dna, this.health);
         } else {
             return null;
         }
@@ -108,11 +109,12 @@ class Ant {
                 // Increase/Decrease Max Speed
                 this.maxSpeed += nutrition / 4;
                 // Increase Sight
-                if (this.dna[0] < 0.005) {
-                    this.dna[0] += 0.0001;
-                }
+                this.dna[0] += 0.0001;
+
                 // Increase the chance of reproducing
-                this.chanceOfReproducing += 0.001;
+                if (this.chanceOfReproducing < 0.01) {
+                    this.chanceOfReproducing += 0.001;
+                }
             } else {
                 if (d < record && d < perception) {
                     record = d;
