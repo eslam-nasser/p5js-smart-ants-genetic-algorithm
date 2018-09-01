@@ -10,8 +10,15 @@ class Ant {
         this.maxForce = random(0.1, 0.3);
         // DNA
         this.dna = [];
-        this.dna[0] = random(-5, 5);
-        this.dna[1] = random(-5, 5);
+        // food weight
+        this.dna[0] = random(-2, 2);
+        // poison weight
+        this.dna[1] = random(-2, 2);
+        // food perceprion
+        this.dna[2] = random(0, 100);
+        // poison perceprion
+        this.dna[3] = random(0, 100);
+
         // Health
         this.health = 1;
     }
@@ -21,7 +28,7 @@ class Ant {
     }
 
     update() {
-        this.health -= 0.001;
+        this.health -= 0.005;
 
         this.vel.add(this.acc);
         this.vel.limit(this.maxSpeed);
@@ -42,8 +49,8 @@ class Ant {
     }
 
     behaviors(good, bad) {
-        let steerGood = this.eat(good, 0.1);
-        let steerBad = this.eat(bad, -0.5);
+        let steerGood = this.eat(good, 0.1, this.dna[2]);
+        let steerBad = this.eat(bad, -0.5, this.dna[3]);
 
         steerGood.mult(this.dna[0]);
         steerBad.mult(this.dna[1]);
@@ -52,14 +59,14 @@ class Ant {
         this.applyForce(steerBad);
     }
 
-    eat(list, nutrition) {
+    eat(list, nutrition, perception) {
         let record = Infinity;
         let closestIndex = -1;
 
         list.forEach((item, i) => {
             // let d = dist(this.pos.x, this.pos.y, item.x, item.y);
             let d = this.pos.dist(item);
-            if (d < record) {
+            if (d < record && d < perception) {
                 record = d;
                 closestIndex = i;
             }
@@ -86,11 +93,18 @@ class Ant {
         translate(this.pos.x, this.pos.y);
         rotate(angle);
 
+        // Food info
+        strokeWeight(3);
         stroke(0, 255, 0);
+        noFill();
         line(0, 0, 0, -this.dna[0] * 20);
+        ellipse(0, 0, this.dna[2] * 2);
 
+        // Poison info
+        strokeWeight(2);
         stroke(255, 0, 0);
         line(0, 0, 0, this.dna[1] * 20);
+        ellipse(0, 0, this.dna[3] * 2);
 
         let gr = color(0, 255, 0);
         let rd = color(255, 0, 0);
@@ -98,7 +112,6 @@ class Ant {
 
         fill(bodyColor);
         stroke(bodyColor);
-        strokeWeight(1);
         beginShape();
         vertex(0, -this.r * 2);
         vertex(-this.r, this.r * 2);
@@ -108,10 +121,27 @@ class Ant {
         pop();
     }
 
-    edges() {
-        if (this.pos.x < -this.r) this.pos.x = width + this.r;
-        if (this.pos.y < -this.r) this.pos.y = height + this.r;
-        if (this.pos.x > width + this.r) this.pos.x = -this.r;
-        if (this.pos.y > height + this.r) this.pos.y = -this.r;
+    boundaries() {
+        let desired = null;
+
+        if (this.pos.x < 25) {
+            desired = createVector(this.maxSpeed, this.vel.y);
+        } else if (this.pos.x > width - 25) {
+            desired = createVector(-this.maxSpeed, this.vel.y);
+        }
+
+        if (this.pos.y < 25) {
+            desired = createVector(this.vel.x, this.maxSpeed);
+        } else if (this.pos.y > height - 25) {
+            desired = createVector(this.vel.x, -this.maxSpeed);
+        }
+
+        if (desired !== null) {
+            desired.normalize();
+            desired.mult(this.maxSpeed);
+            let steer = p5.Vector.sub(desired, this.vel);
+            steer.limit(this.maxForce);
+            this.applyForce(steer);
+        }
     }
 }
