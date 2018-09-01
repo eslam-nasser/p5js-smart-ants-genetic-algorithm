@@ -1,23 +1,46 @@
 class Ant {
-    constructor(x = 0, y = 0) {
+    constructor(x = 0, y = 0, parentDNA = []) {
         // Forces
         this.pos = createVector(x, y);
         this.vel = createVector();
         this.acc = createVector();
         // Limits
         this.r = 3;
-        this.maxSpeed = random(2, 3);
-        this.maxForce = random(0.1, 0.3);
-        // DNA
-        this.dna = [];
-        // food weight
-        this.dna[0] = random(-2, 2);
-        // poison weight
-        this.dna[1] = random(-2, 2);
-        // food perceprion
-        this.dna[2] = random(1, 100);
-        // poison perceprion
-        this.dna[3] = random(1, 100);
+        this.maxSpeed = random(2, 5);
+        this.maxForce = random(0.1, 0.5);
+        this.mr = 0.1;
+
+        if (parentDNA.legnth > 0) {
+            // Copy parent dna
+            this.dna[0] = parentDNA[0];
+            this.dna[1] = parentDNA[1];
+            this.dna[2] = parentDNA[2];
+            this.dna[3] = parentDNA[3];
+            // Mutaion
+            if (random(1) < this.mr) {
+                this.dna[0] += random(-0.1, 0.1);
+            }
+            if (random(1) < this.mr) {
+                this.dna[1] += random(-0.1, 0.1);
+            }
+            if (random(1) < this.mr) {
+                this.dna[2] += random(-10, 10);
+            }
+            if (random(1) < this.mr) {
+                this.dna[3] += random(-10, 10);
+            }
+        } else {
+            // DNA
+            this.dna = [];
+            // food weight
+            this.dna[0] = random(-2, 2);
+            // poison weight
+            this.dna[1] = random(-2, 2);
+            // food perceprion
+            this.dna[2] = random(1, 100);
+            // poison perceprion
+            this.dna[3] = random(1, 100);
+        }
 
         // Health
         this.health = 1;
@@ -36,6 +59,14 @@ class Ant {
         this.acc.mult(0);
     }
 
+    cloneMe() {
+        if (random(1) < 0.001) {
+            return new Ant(this.pos.x, this.pos.y, this.dna);
+        } else {
+            return null;
+        }
+    }
+
     seek(target) {
         const desired = p5.Vector.sub(target, this.pos);
         const d = dist(target.x, target.y, this.pos.x, this.pos.y);
@@ -49,8 +80,8 @@ class Ant {
     }
 
     behaviors(good, bad) {
-        let steerGood = this.eat(good, 0.1, this.dna[2]);
-        let steerBad = this.eat(bad, -0.5, this.dna[3]);
+        let steerGood = this.eat(good, 0.3, this.dna[2]);
+        let steerBad = this.eat(bad, -0.75, this.dna[3]);
 
         steerGood.mult(this.dna[0]);
         steerBad.mult(this.dna[1]);
@@ -67,7 +98,7 @@ class Ant {
             let item = list[i];
             let d = this.pos.dist(item);
             if (d < this.maxSpeed) {
-                list.splice(closest, 1);
+                list.splice(i, 1);
                 this.health += nutrition;
             } else {
                 if (d < record && d < perception) {

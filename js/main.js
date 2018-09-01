@@ -4,7 +4,7 @@ let poisons = [];
 
 function setup() {
     createCanvas(640, 480);
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 50; i++) {
         ants.push(new Ant(random(width), random(height)));
     }
 
@@ -19,7 +19,7 @@ function setup() {
 function draw() {
     background(55);
 
-    if (random(1) < 0.05) {
+    if (random(1) < 0.1) {
         foods.push(createVector(random(width), random(height)));
     }
     if (random(1) < 0.01) {
@@ -31,21 +31,30 @@ function draw() {
         ants[i].update();
         ants[i].boundaries();
         ants[i].show();
+        let newAnt = ants[i].cloneMe();
+        if (newAnt) {
+            ants.push(newAnt);
+        }
 
         if (ants[i].dead()) {
+            foods.push(createVector(ants[i].pos.x, ants[i].pos.y));
             ants.splice(i, 1);
         }
     }
 
-    foods.forEach(food => {
+    for (let i = foods.length - 1; i >= 0; i--) {
         fill(0, 255, 0);
         noStroke();
-        ellipse(food.x, food.y, 8);
-    });
+        ellipse(foods[i].x, foods[i].y, 4);
+    }
 
-    poisons.forEach(poison => {
+    for (let i = poisons.length - 1; i >= 0; i--) {
         fill(255, 0, 0);
         noStroke();
-        ellipse(poison.x, poison.y, 8);
-    });
+        ellipse(poisons[i].x, poisons[i].y, 4);
+    }
+}
+
+function mouseDragged() {
+    ants.push(new Ant(mouseX, mouseY));
 }
